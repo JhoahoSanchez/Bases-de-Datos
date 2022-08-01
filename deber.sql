@@ -14,7 +14,7 @@ select * from DETALLE_ORDENES;
 
 select COUNT(*) from ORDENES;
 
-drop procedure estadisticas_de_ventas;
+drop procedure SP_04;
 
 create procedure SP_04 @productoid int, @porcentaje decimal OUTPUT
 as
