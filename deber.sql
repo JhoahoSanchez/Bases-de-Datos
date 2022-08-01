@@ -1,4 +1,4 @@
-/* 5. Escriba un SP para obtener la estadística de venta de un producto, que reciba como parámetro una 
+/* 4. Escriba un SP para obtener la estadística de venta de un producto, que reciba como parámetro una 
 variable @productoid int y asigne un id de producto.    
 •	Si no existe ese producto, imprima un mensaje y retorne un código de error.  
 •	Si existe el producto, pero no se tienen ventas de ese producto,    imprima un mensaje con código de error.
