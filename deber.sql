@@ -1,10 +1,10 @@
-/* 5. Escriba un SP para obtener la estadÌstica de venta de un producto, que reciba como par·metro una 
+/* 5. Escriba un SP para obtener la estad√≠stica de venta de un producto, que reciba como par√°metro una 
 variable @productoid int y asigne un id de producto.    
-ï	Si no existe ese producto, imprima un mensaje y retorne un cÛdigo de error.  
-ï	Si existe el producto, pero no se tienen ventas de ese producto,    imprima un mensaje con cÛdigo de error.
-ï	Para obtener la estadÌstica verifique el n˙mero de Ûrdenes que se tienen y en cu·ntas    de esas Ûrdenes 
-se ha incluido ese producto y lo presenta como porcentaje.  (ej.  50 Ûrdenes, 20 Ûrdenes con ese producto,
-20/50 *100). Retorne esa estadÌstica (un valor decimal    entre 0 y 100, como un par·metro de salida. */
+‚Ä¢	Si no existe ese producto, imprima un mensaje y retorne un c√≥digo de error.  
+‚Ä¢	Si existe el producto, pero no se tienen ventas de ese producto,    imprima un mensaje con c√≥digo de error.
+‚Ä¢	Para obtener la estad√≠stica verifique el n√∫mero de √≥rdenes que se tienen y en cu√°ntas    de esas √≥rdenes 
+se ha incluido ese producto y lo presenta como porcentaje.  (ej.  50 √≥rdenes, 20 √≥rdenes con ese producto,
+20/50 *100). Retorne esa estad√≠stica (un valor decimal    entre 0 y 100, como un par√°metro de salida. */
 
 use PEDIDOS
 go
@@ -50,5 +50,4 @@ execute @retorno = SP_04 @id, @per OUTPUT;
 
 print 'Retorno de sp: ' + convert(varchar(2),@retorno);
 print 'Valor output: '+ convert(varchar(8),@per);
-
 
