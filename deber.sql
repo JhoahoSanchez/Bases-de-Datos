@@ -1,3 +1,73 @@
+/* 1. Escriba un SP para realizar una transferencia entre cuentas. El SP recibe como parámetros: el número de cuenta de origen, 
+el valor a debitar de esa cuenta, el número de cuenta de destino. (Usar el saldo_contable en cuenta origen y en cuenta destino). 
+Tome como fecha del movimiento  la fecha del sistema. Debe considerar que la transferencia genera un DETALLE_MOV de  débito de la 
+cuenta origen y otro de crédito en la cuenta destino. Además, verifique si la cuenta de origen tiene el saldo suficiente, en caso 
+contrario rollback. Si hay algún error, rollback a la transacción. La transferencia debe tratarse como  una transacción para considerar 
+el commit y el rollback respectivos */
+
+USE BANCO;
+SELECT * FROM CUENTAS WHERE NUMCTA=1 OR NUMCTA=15;
+SELECT * FROM DETALLE_MOV_CTA WHERE NUMCTA=1 OR NUMCTA=15;
+
+CREATE PROCEDURE SP_01
+@CUENTA_ORIGEN INT,
+@VALOR_TRAN MONEY,
+@CUENTA_DESTINO INT
+AS
+IF NOT EXISTS(SELECT * FROM Cuentas WHERE numCta=@CUENTA_ORIGEN)
+		BEGIN
+			PRINT 'LA CUENTA DE ORIGEN NO EXISTE';
+			RETURN(1);
+		END
+ELSE
+		BEGIN
+			IF NOT EXISTS(SELECT * FROM CUENTAS WHERE NUMCTA=@CUENTA_DESTINO)
+			BEGIN
+				PRINT 'LA CUENTA DE DESTINO NO EXISTE';
+				RETURN(2);
+			END
+			ELSE
+			BEGIN
+				IF EXISTS (SELECT * FROM CUENTAS WHERE NUMCTA=@CUENTA_ORIGEN AND SALDO_EFECTIVO > @VALOR_TRAN)
+				BEGIN
+					UPDATE CUENTAS SET SALDO_EFECTIVO = SALDO_EFECTIVO - @VALOR_TRAN 
+					WHERE NUMCTA=@CUENTA_ORIGEN;
+
+					UPDATE CUENTAS SET SALDO_EFECTIVO = SALDO_EFECTIVO + @VALOR_TRAN 
+					WHERE NUMCTA=@CUENTA_DESTINO;
+
+					INSERT INTO DETALLE_MOV_CTA ([numCta],[fecha_Mov],[tipo_Mov],[valor]) 
+					VALUES(@CUENTA_ORIGEN, GETDATE(),'D',@VALOR_TRAN);
+
+					INSERT INTO DETALLE_MOV_CTA ([numCta],[fecha_Mov],[tipo_Mov],[valor]) 
+					VALUES(@CUENTA_DESTINO, GETDATE(),'C',@VALOR_TRAN);
+
+					PRINT 'LA TRANSACCION SE REALIZO CON EXITO'
+				END
+				ELSE
+				BEGIN
+					PRINT 'EL SALDO EFECTIVO DE LA CUENTA DE ORIGEN ES INSUFICIENTE PARA REALIZAR ESTA TRANSACCION'
+					RETURN (3)
+				END
+			END
+			
+		END
+GO
+
+BEGIN TRAN
+	BEGIN TRY
+		EXEC SP_01 1,20.00,15
+		PRINT 'LA TRANSACCION SE COMPLETO'
+		COMMIT TRAN
+	END TRY
+	BEGIN CATCH
+	 ROLLBACK TRAN
+	 PRINT 'LA TRANSACCION FALLO'
+	END CATCH
+SELECT * FROM CUENTAS WHERE NUMCTA=1 OR NUMCTA=15;
+SELECT * FROM DETALLE_MOV_CTA WHERE NUMCTA=1 OR NUMCTA=15;
+
+
 /* 4. Escriba un SP para obtener la estadística de venta de un producto, que reciba como parámetro una 
 variable @productoid int y asigne un id de producto.    
 •	Si no existe ese producto, imprima un mensaje y retorne un código de error.  
