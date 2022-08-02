@@ -67,6 +67,81 @@ BEGIN TRAN
 SELECT * FROM CUENTAS WHERE NUMCTA=1 OR NUMCTA=15;
 SELECT * FROM DETALLE_MOV_CTA WHERE NUMCTA=1 OR NUMCTA=15;
 
+/* 2. Escriba un SP para ingresar un nuevo cliente al banco. El SP recibe como parámetros:  cédula, apellido, 
+nombre, dirección, celular, teléfono de casa (opcional) y teléfono del trabajo (opcional) y el nombre del sector 
+donde vive el cliente. Además, para asignarle el ejecutivo, considere al ejecutivo con el menor número de 
+clientes asignados. Si hay ejecutivos con el mismo número de clientes, entonces de entre ellos, al primero en 
+orden alfabético.  Debe probar el SP usando TRY-CATCH.*/
+
+USE BANCO
+GO
+
+sp_help clientes
+go
+
+DROP PROCEDURE SP_02
+
+CREATE PROCEDURE SP_02
+	@CEDULA INT,
+	@APELLIDO VARCHAR(30),
+	@NOMBRE VARCHAR(30),
+	@DIRECCION VARCHAR(50),
+	@CELULAR VARCHAR(9),
+	@TEL_CON VARCHAR(9),
+	@SECTOR VARCHAR(30)
+AS
+	CREATE TABLE #NUM_CLIENTES_ASIGNADOS (CODID INT primary key, APELLIDO VARCHAR(30), NOMBRE VARCHAR(30), NUM_CLIENTES INT);
+
+	INSERT INTO #NUM_CLIENTES_ASIGNADOS 
+	SELECT c.codEjecutivo, e.apellido, e.nombre, COUNT(*)
+	FROM Clientes c JOIN Ejecutivos e 
+	ON c.codEjecutivo = e.codEjecutivo
+	GROUP BY c.codEjecutivo, e.APELLIDO, e.NOMBRE
+	ORDER BY e.APELLIDO, e.NOMBRE;
+
+	DECLARE @NUM_CLIENTE INT, @COD_EJE INT
+	SET @NUM_CLIENTE=(SELECT MIN(NUM_CLIENTES)
+					FROM #NUM_CLIENTES_ASIGNADOS)
+		
+	SET @COD_EJE=(SELECT CODID
+					FROM #NUM_CLIENTES_ASIGNADOS
+					WHERE NUM_CLIENTES = @NUM_CLIENTE 
+					AND APELLIDO=(SELECT TOP 1 APELLIDO FROM #NUM_CLIENTES_ASIGNADOS ORDER BY APELLIDO, NOMBRE) 
+					AND NOMBRE=(SELECT TOP 1 NOMBRE FROM #NUM_CLIENTES_ASIGNADOS ORDER BY APELLIDO, NOMBRE))
+
+	DECLARE @COD_SECTOR INT;
+	IF EXISTS (SELECT * FROM Sector WHERE nombreSector=@SECTOR)
+		BEGIN
+		SET @COD_SECTOR=(SELECT codSector FROM Sector WHERE nombreSector=@SECTOR)
+		END
+	ELSE
+		BEGIN
+		PRINT 'EL SECTOR NO EXISTE'
+		RETURN(1)
+		END
+
+	INSERT INTO Clientes (cedula,apellido,nombre,direccion,sector,fono_conv,celular,codEjecutivo)
+	values (@CEDULA, @APELLIDO, @NOMBRE, @DIRECCION, @COD_SECTOR, @TEL_CON,@CELULAR, @COD_EJE)
+
+	IF @@ERROR <> 0 
+	BEGIN
+		PRINT 'NO SE PUDO REGISTRAR EL CLIENTE'
+		RETURN(2)
+	END
+
+
+
+BEGIN TRY
+    EXEC SP_02 1752896314, 'Gonzales Pérez', 'Álbaro Josue', 'El Telegrafo', '2425550', '0987754264',  'EL BOSQUE'
+END TRY
+BEGIN CATCH
+    SELECT ERROR_NUMBER() AS ErrorNumber, ERROR_MESSAGE() AS ErrorMessage;
+END CATCH
+
+SELECT * FROM Clientes
+SELECT * FROM Clientes WHERE nombre='Álbaro Josue' AND apellido='Gonzales Pérez'
+
+
 /*3. Sobre la BD BANCO. Escriba un SP que verifique un préstamo que ya ha sido cancelado. 
 El SP recibe como parámetro el número del préstamo.
 
